@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Email Composer</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 40px auto;
+                max-width: 600px;
+            }
+            input,
+            textarea,
+            select {
+                width: 100%;
+                padding: 8px;
+                margin: 8px 0;
+            }
+            button {
+                padding: 10px 15px;
+                background-color: #2563eb;
+                color: white;
+                border: none;
+                cursor: pointer;
+            }
+            .success {
+                color: green;
+            }
+            .error {
+                color: red;
+            }
+            .card {
+                padding: 20px;
+                border: 1px solid #ddd;
+                border-radius: 6px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <h2>Email Composer Agent</h2>
+
+            {% if success %}
+            <p class="success">{{ success }}</p>
+            <p><strong>Subject:</strong> {{ subject }}</p>
+            {% endif %} {% if error %}
+            <p class="error">{{ error }}</p>
+            {% endif %}
+
+            <form method="post" action="/send">
+                <label>Recipient Email</label>
+                <input type="email" name="to_email" required />
+
+                <label>Email Task</label>
+                <textarea name="task" rows="4" required></textarea>
+
+                <label>Tone</label>
+                <select name="tone">
+                    <option value="professional">Professional</option>
+                    <option value="formal">Formal</option>
+                    <option value="friendly">Friendly</option>
+                    <option value="casual">Casual</option>
+                </select>
+
+                <button type="submit">Compose & Send</button>
+            </form>
+        </div>
+    </body>
+</html>
