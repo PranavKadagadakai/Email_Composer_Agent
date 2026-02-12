@@ -43,6 +43,13 @@ Return STRICT JSON (no markdown, no extra commentary):
   "html_body": "...",
   "text_body": "..."
 }}
+
+You MUST only use these placeholders if needed:
+{{recipient_name}}
+{{sender_name}}
+
+Do not invent any new placeholders.
+If not needed, do not use placeholders.
 """
 
     def generate_email(

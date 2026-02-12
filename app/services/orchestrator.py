@@ -2,6 +2,7 @@
 
 import logging
 
+from app.email.formatter import render_placeholders
 from app.email.sender import EmailSender
 from app.llm.gemini_client import GeminiEmailGenerator
 from app.schemas import EmailRequest
@@ -21,6 +22,21 @@ class EmailOrchestrator:
             task=request.task,
             tone=request.tone,
             constraints=request.constraints,
+        )
+
+        # Define replacement values
+        placeholder_values = {
+            "recipient_name": request.to_email.split("@")[0],
+            "sender_name": "Your Name",  # Replace dynamically if needed
+        }
+
+        # Apply rendering
+        email_content["html_body"] = render_placeholders(
+            email_content["html_body"], placeholder_values
+        )
+
+        email_content["text_body"] = render_placeholders(
+            email_content["text_body"], placeholder_values
         )
 
         logger.info("Sending email via SMTP...")
