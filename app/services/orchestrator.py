@@ -24,22 +24,35 @@ class EmailOrchestrator:
             constraints=request.constraints,
         )
 
-        # Define replacement values
+        # --------------------------
+        # Name Resolution (LLM-driven)
+        # --------------------------
+
+        recipient_fallback = request.to_email.split("@")[0]
+
+        recipient_name = email_content.get("recipient_name") or recipient_fallback
+
+        sender_name = (
+            getattr(request, "sender_name", None)
+            or email_content.get("sender_name")
+            or recipient_fallback
+        )
+
         placeholder_values = {
-            "recipient_name": request.to_email.split("@")[0],
-            "sender_name": "Your Name",  # Replace dynamically if needed
+            "recipient_name": recipient_name,
+            "sender_name": sender_name,
         }
 
-        # Apply rendering
+        # Replace placeholders deterministically
         email_content["html_body"] = render_placeholders(
-            email_content["html_body"], placeholder_values
+            email_content["html_body"],
+            placeholder_values,
         )
 
         email_content["text_body"] = render_placeholders(
-            email_content["text_body"], placeholder_values
+            email_content["text_body"],
+            placeholder_values,
         )
-
-        logger.info("Sending email via SMTP...")
 
         self.sender.send(
             recipient=request.to_email,

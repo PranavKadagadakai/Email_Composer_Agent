@@ -3,44 +3,48 @@
 import re
 from typing import Dict
 
-ALLOWED_PLACEHOLDERS = {
+PLACEHOLDER_KEYS = {
     "recipient_name",
     "sender_name",
-    "company_name",
-    "date",
 }
 
 
 def normalize_placeholders(content: str) -> str:
     """
-    Normalizes common LLM placeholder variants to {{placeholder}} format.
+    Convert common LLM placeholder variations into {{key}} format.
+    Handles:
+        {recipient_name}
+        {{recipient_name}}
+        [recipient_name]
+        <recipient_name>
+        recipient_name
     """
 
-    patterns = {
-        r"\[recipient_name\]": "{{recipient_name}}",
-        r"\[sender_name\]": "{{sender_name}}",
-        r"<recipient_name>": "{{recipient_name}}",
-        r"<sender_name>": "{{sender_name}}",
-    }
+    for key in PLACEHOLDER_KEYS:
+        patterns = [
+            rf"\{{\{{\s*{key}\s*\}}\}}",  # {{ key }}
+            rf"\{{\s*{key}\s*\}}",  # { key }
+            rf"\[\s*{key}\s*\]",  # [ key ]
+            rf"<\s*{key}\s*>",  # < key >
+        ]
 
-    for pattern, replacement in patterns.items():
-        content = re.sub(pattern, replacement, content, flags=re.IGNORECASE)
+        for pattern in patterns:
+            content = re.sub(
+                pattern,
+                f"{{{{{key}}}}}",
+                content,
+                flags=re.IGNORECASE,
+            )
 
     return content
 
 
 def render_placeholders(content: str, values: Dict[str, str]) -> str:
-    """
-    Safely replaces allowed placeholders.
-    Raises error if unknown placeholders remain.
-    """
-
     content = normalize_placeholders(content)
 
-    for key in ALLOWED_PLACEHOLDERS:
+    for key, value in values.items():
         placeholder = f"{{{{{key}}}}}"
-        if placeholder in content:
-            content = content.replace(placeholder, values.get(key, ""))
+        content = content.replace(placeholder, value)
 
     # Detect unresolved placeholders
     unresolved = re.findall(r"\{\{.*?\}\}", content)

@@ -22,35 +22,56 @@ class GeminiEmailGenerator:
 
     def _build_prompt(self, task: str, tone: str, constraints: str | None) -> str:
         return f"""
-You are a professional email writing assistant.
+    You are a deterministic email generation engine.
 
-Generate:
-1. A concise email subject.
-2. An HTML email body with clean, minimal inline styling.
-3. A plain text fallback version.
+    Your task is to generate a COMPLETE email based ONLY on the given task.
 
-Rules:
-- Use simple inline CSS (e.g., font-family: Arial, line-height:1.6).
-- Do not over-style the HTML.
-- Respect the tone: {tone}.
-- Fulfill the task: {task}.
-- Additional constraints: {constraints or "None"}.
+    Do NOT:
+    - Ask for more information.
+    - Provide instructions.
+    - Provide guidance.
+    - Add assistant-style conversational text.
+    - Add welcome messages.
+    - Add meta commentary.
+    - Add explanation.
 
-Return STRICT JSON (no markdown, no extra commentary):
+    You MUST:
+    - Extract recipient name if explicitly mentioned.
+    - Extract sender name if explicitly mentioned.
+    - If not mentioned, return null for that field.
+    - Use ONLY these placeholders in the email body:
+      {{recipient_name}}
+      {{sender_name}}
 
-{{
-  "subject": "...",
-  "html_body": "...",
-  "text_body": "..."
-}}
+    Generate:
+    1. subject
+    2. html_body
+    3. text_body
+    4. recipient_name (string or null)
+    5. sender_name (string or null)
 
-You MUST only use these placeholders if needed:
-{{recipient_name}}
-{{sender_name}}
+    The email must be fully written and complete.
+    It must NOT ask the user for additional information.
 
-Do not invent any new placeholders.
-If not needed, do not use placeholders.
-"""
+    Tone: {tone}
+    Task: {task}
+    Additional constraints: {constraints or "None"}
+
+    Return STRICT JSON ONLY.
+    No markdown.
+    No explanation.
+    No extra text.
+
+    Expected format:
+
+    {{
+      "subject": "...",
+      "html_body": "...",
+      "text_body": "...",
+      "recipient_name": "Name or null",
+      "sender_name": "Name or null"
+    }}
+    """
 
     def generate_email(
         self,
@@ -79,8 +100,16 @@ If not needed, do not use placeholders.
                 parsed = json.loads(raw_text)
 
                 # Validate keys
-                if not all(k in parsed for k in ["subject", "html_body", "text_body"]):
-                    raise ValueError("Gemini JSON missing required keys.")
+                required_keys = [
+                    "subject",
+                    "html_body",
+                    "text_body",
+                    "recipient_name",
+                    "sender_name",
+                ]
+
+                if not all(k in parsed for k in required_keys):
+                    raise ValueError("Invalid JSON structure from Gemini.")
 
                 return parsed
 

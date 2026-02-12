@@ -57,6 +57,7 @@ class EmailSender:
 
                 smtp.send_message(msg)
                 logger.info(f"Email successfully sent to {recipient}.")
+                logger.info(f"Email sent successfully with content {html_body}")
 
             return True
 
